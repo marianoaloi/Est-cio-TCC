@@ -55,17 +55,7 @@ public class ProcessFreeMind {
 	final static String DOCBASE = "/home/maloi/Documents/";
 
 	private StringBuilder makeHTML(FreeMind tCC) throws IOException {
-		BufferedReader template = new BufferedReader(
-				new InputStreamReader(new FileInputStream(DOCBASE + "template.htm"), Charset.forName("windows-1252")));
-		StringBuilder templateData = new StringBuilder();
-		String line;
-		while ((line = template.readLine()) != null) {
-			// templateData.append(StringEscapeUtils.escapeHtml4(line));
-			templateData.append(line);
-			templateData.append('\r');
-			templateData.append('\n');
-		}
-		template.close();
+		StringBuilder templateData = readFile();
 
 		Map<String, String> config = new HashMap<String, String>();
 		templateData = new StringBuilder(readConfig(templateData, config));
@@ -78,6 +68,21 @@ public class ProcessFreeMind {
 
 		citation(config, templateData);
 
+		return templateData;
+	}
+
+	private StringBuilder readFile() throws IOException {
+		BufferedReader template = new BufferedReader(
+				new InputStreamReader(new FileInputStream(DOCBASE + "template.htm"), Charset.forName("windows-1252")));
+		StringBuilder templateData = new StringBuilder();
+		String line;
+		while ((line = template.readLine()) != null) {
+			// templateData.append(StringEscapeUtils.escapeHtml4(line));
+			templateData.append(line);
+			templateData.append('\r');
+			templateData.append('\n');
+		}
+		template.close();
 		return templateData;
 	}
 
@@ -157,8 +162,8 @@ public class ProcessFreeMind {
 				if (internal.icon != null) {
 					String BUILTIN = internal.icon.BUILTIN;
 					if (config.containsKey(BUILTIN)) {
-						result.append(config.get(BUILTIN).replace(">[[[" + BUILTIN + "]]]<",
-								">" + (internal.TEXT != null && !"go".equals(BUILTIN) ? internal.TEXT : "") + "<"));
+						result.append(config.get(BUILTIN).replace("[[[" + BUILTIN + "]]]",
+								 (internal.TEXT != null && !"go".equals(BUILTIN) ? internal.TEXT : "") ));
 						if (internal.richcontent != null) {
 							Document doc = Jsoup.parse(internal.richcontent);
 							Elements body = doc.select("body");
@@ -233,7 +238,7 @@ public class ProcessFreeMind {
 			for (Node node : listNode) {
 				changeMaket(node.getNode(), templateData);
 
-				Matcher m = Pattern.compile("\\>\\{\\{\\{" + node.TEXT + "\\}\\}\\}\\<").matcher(templateData);
+				Matcher m = Pattern.compile("\\{\\{\\{" + node.TEXT + "\\}\\}\\}").matcher(templateData);
 
 				while (m.find()) {
 
@@ -242,11 +247,11 @@ public class ProcessFreeMind {
 
 					if (begin >= 0)
 						templateData.replace(begin, begin + findString.length(),
-								">" + onlyText(node.richcontent) + "<");
+								 onlyText(node.richcontent) );
 
 				}
 
-				replaceStringBuilder(">{{{" + node.TEXT + "}}}<", ">" + onlyText(node.richcontent) + "<", templateData);
+				replaceStringBuilder("{{{" + node.TEXT + "}}}",  onlyText(node.richcontent) , templateData);
 			}
 
 	}
